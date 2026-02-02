@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <h2>Auto Reply Dashboard</h2>
+
+    <form method="POST">
+        <input name="keyword" placeholder="Keyword" required>
+        <input name="reply" placeholder="Auto Reply" required>
+        <button type="submit">Save</button>
+    </form>
+
+    <h3>Your Replies</h3>
+    <ul>
+        {% for k, r in replies %}
+        <li><b>{{ k }}</b> → {{ r }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="/logout">Logout</a>
+</body>
+</html>

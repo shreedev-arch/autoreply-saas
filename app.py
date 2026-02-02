@@ -1,0 +1,164 @@
+from flask import Flask, render_template, request, redirect, url_for, session
+import sqlite3
+import secrets
+from datetime import date
+
+app = Flask(__name__)
+app.secret_key = "supersecretkey"  # required for sessions
+
+def get_db():
+    return sqlite3.connect("database.db")
+
+@app.route("/", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if "user" in session:
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE user=? AND password=?", (username, password))
+        user = cur.fetchone()
+        conn.close()
+
+        if user:
+            session["user"] = username
+            return redirect(url_for("dashboard"))
+
+    return render_template("login.html")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        api_key = secrets.token_hex(16)
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        cur.execute("INSERT INTO api_keys (user, api_key) VALUES (?, ?)",(username, api_key))
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
+
+
+@app.route("/auto-reply", methods=["POST"])
+def auto_reply():
+    api_key = request.headers.get("X-API-KEY")
+
+    if not api_key:
+        return {"error": "API key missing"}, 401
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # 1️⃣ Validate API key + get user & plan
+    cur.execute(
+        "SELECT user, plan FROM api_keys WHERE api_key=?",
+        (api_key,)
+    )
+    row = cur.fetchone()
+
+    if not row:
+        conn.close()
+        return {"error": "Invalid API key"}, 401
+
+    user, plan = row
+
+    # 2️⃣ Plan-based limit
+    DAILY_LIMIT = 50 if plan == "FREE" else 1000
+
+    # 3️⃣ Usage tracking
+    from datetime import date
+    today = date.today().isoformat()
+
+    cur.execute(
+        "SELECT count FROM api_usage WHERE api_key=? AND date=?",
+        (api_key, today)
+    )
+    usage = cur.fetchone()
+
+    if usage and usage[0] >= DAILY_LIMIT:
+        conn.close()
+        return {
+            "error": "Daily limit reached",
+            "plan": plan
+        }, 429
+
+    if usage:
+        cur.execute(
+            "UPDATE api_usage SET count = count + 1 WHERE api_key=? AND date=?",
+            (api_key, today)
+        )
+    else:
+        cur.execute(
+            "INSERT INTO api_usage (api_key, date, count) VALUES (?, ?, 1)",
+            (api_key, today)
+        )
+
+    conn.commit()
+
+    # 4️⃣ Process message
+    data = request.get_json()
+    message = data.get("message", "")
+
+    conn.close()
+
+    return {
+        "reply": f"Hello {user}, your message was received ✅",
+        "plan": plan
+    }
+
+@app.route("/upgrade", methods=["POST"])
+def upgrade_plan():
+    data = request.get_json()
+    api_key = data.get("api_key")
+
+    if not api_key:
+        return {"error": "API key missing"}, 400
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT user FROM api_keys WHERE api_key=?",
+        (api_key,)
+    )
+    row = cur.fetchone()
+
+    if not row:
+        return {"error": "Invalid API key"}, 401
+
+    user = row[0]
+
+    cur.execute(
+        "UPDATE users SET plan='PRO' WHERE username=?",
+        (user,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "status": "success",
+        "plan": "PRO",
+        "message": "Account upgraded successfully 🚀"
+    }
+
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect(url_for("login"))
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
