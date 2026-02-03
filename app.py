@@ -27,8 +27,7 @@ def get_db():
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if "user" in session:
-        return redirect(url_for("login"))
+    
 
     if request.method == "POST":
         username = request.form["username"]
