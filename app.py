@@ -67,20 +67,23 @@ def register():
 
 @app.route("/auto-reply", methods=["GET", "POST"])
 def auto_reply():
-    if "user" not in session and request.method == "GET":
-    return redirect(url_for("login"))
-    
+    # 🔒 Protect page
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    # 📄 Show page
     if request.method == "GET":
         return render_template("auto_reply.html")
-     api_key = request.headers.get("X-API-KEY")
 
+    # 🔑 API call (POST)
+    api_key = request.headers.get("X-API-KEY")
     if not api_key:
         return {"error": "API key missing"}, 401
 
     conn = get_db()
     cur = conn.cursor()
 
-    # 1️⃣ Validate API key + get user & plan
+    # Validate API key + get user & plan
     cur.execute(
         "SELECT user, plan FROM api_keys WHERE api_key=?",
         (api_key,)
@@ -93,10 +96,8 @@ def auto_reply():
 
     user, plan = row
 
-    # 2️⃣ Plan-based limit
     DAILY_LIMIT = 50 if plan == "FREE" else 1000
 
-    # 3️⃣ Usage tracking
     from datetime import date
     today = date.today().isoformat()
 
@@ -108,10 +109,7 @@ def auto_reply():
 
     if usage and usage[0] >= DAILY_LIMIT:
         conn.close()
-        return {
-            "error": "Daily limit reached",
-            "plan": plan
-        }, 429
+        return {"error": "Daily limit reached", "plan": plan}, 429
 
     if usage:
         cur.execute(
@@ -125,11 +123,6 @@ def auto_reply():
         )
 
     conn.commit()
-
-    # 4️⃣ Process message
-    data = request.get_json()
-    message = data.get("message", "")
-
     conn.close()
 
     return {
