@@ -67,15 +67,16 @@ def register():
 
 @app.route("/auto-reply", methods=["GET", "POST"])
 def auto_reply():
-    # If not logged in and trying to open page → go to login
+
+    # 🔒 Block access if not logged in (browser)
     if "user" not in session and request.method == "GET":
         return redirect(url_for("login"))
 
-    # Show page in browser
+    # 🌐 Show UI page
     if request.method == "GET":
         return render_template("auto_reply.html")
 
-    # API request (POST)
+    # 🔑 API logic starts ONLY for POST
     api_key = request.headers.get("X-API-KEY")
     if not api_key:
         return {"error": "API key missing"}, 401
@@ -94,10 +95,10 @@ def auto_reply():
         return {"error": "Invalid API key"}, 401
 
     user, plan = row
+    DAILY_LIMIT = 50 if plan == "FREE" else 1000
 
     from datetime import date
     today = date.today().isoformat()
-    DAILY_LIMIT = 50 if plan == "FREE" else 1000
 
     cur.execute(
         "SELECT count FROM api_usage WHERE api_key=? AND date=?",
@@ -122,6 +123,9 @@ def auto_reply():
 
     conn.commit()
     conn.close()
+
+    data = request.get_json()
+    message = data.get("message", "")
 
     return {
         "reply": f"Hello {user}, your message was received ✅",
