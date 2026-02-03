@@ -3,11 +3,26 @@ import sqlite3
 import secrets
 from datetime import date
 
+def init_db():
+    conn = sqlite3.connect("database.db")
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # required for sessions
 
 def get_db():
-    return sqlite3.connect("database.db")
+    return sqlite3.connect("saas.db")
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
