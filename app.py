@@ -6,8 +6,14 @@ def init_db():
     conn = sqlite3.connect("database.db")
     cur = conn.cursor()
 
+    # DROP old tables (important)
+    cur.execute("DROP TABLE IF EXISTS users")
+    cur.execute("DROP TABLE IF EXISTS api_keys")
+    cur.execute("DROP TABLE IF EXISTS api_usage")
+
+    # CREATE fresh tables
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
             password TEXT,
@@ -16,7 +22,7 @@ def init_db():
     """)
 
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS api_keys (
+        CREATE TABLE api_keys (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user TEXT,
             api_key TEXT UNIQUE
@@ -24,7 +30,7 @@ def init_db():
     """)
 
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS api_usage (
+        CREATE TABLE api_usage (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             api_key TEXT,
             date TEXT,
@@ -103,9 +109,8 @@ def auto_reply():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT user, plan FROM api_keys WHERE api_key=?",
-        (api_key,)
+    cur.execute("""SELECT users.username, users.plan FROM api_keys JOIN users ON api_keys.user = users.username
+    WHERE api_keys.api_key=?""",(api_key,)
     )
     row = cur.fetchone()
 
