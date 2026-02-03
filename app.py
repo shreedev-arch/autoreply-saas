@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import secrets
+from datetime import date
 
 def init_db():
     conn = sqlite3.connect("database.db")
