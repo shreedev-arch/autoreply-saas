@@ -22,7 +22,7 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"  # required for sessions
 
 def get_db():
-    return sqlite3.connect("saas.db")
+    return sqlite3.connect("database.db")
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
