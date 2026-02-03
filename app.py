@@ -149,7 +149,7 @@ def auto_reply():
     conn.commit()
     conn.close()
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     message = data.get("message", "")
 
     return {
