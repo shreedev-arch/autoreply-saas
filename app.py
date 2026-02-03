@@ -1,18 +1,37 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import secrets
-from datetime import date
 
 def init_db():
     conn = sqlite3.connect("database.db")
     cur = conn.cursor()
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
-            password TEXT
+            password TEXT,
+            plan TEXT DEFAULT 'FREE'
         )
     """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS api_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT,
+            api_key TEXT UNIQUE
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS api_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            api_key TEXT,
+            date TEXT,
+            count INTEGER
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -55,7 +74,7 @@ def register():
 
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        cur.execute("INSERT INTO users (username, password, plan) VALUES (?, ?, 'FREE')",(username, password))
         cur.execute("INSERT INTO api_keys (user, api_key) VALUES (?, ?)",(username, api_key))
         conn.commit()
         conn.close()
