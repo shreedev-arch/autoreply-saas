@@ -42,7 +42,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-    if __name__ == "__main__":
     init_db()
 
 app = Flask(__name__)
