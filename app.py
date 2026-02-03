@@ -28,7 +28,7 @@ def get_db():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if "user" in session:
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("auto_reply"))
 
     if request.method == "POST":
         username = request.form["username"]
@@ -42,7 +42,7 @@ def login():
 
         if user:
             session["user"] = username
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("auto_reply"))
 
     return render_template("login.html")
 
