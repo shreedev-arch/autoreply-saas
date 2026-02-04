@@ -3,40 +3,34 @@ import sqlite3
 import secrets
 from datetime import date
 
-def init_db():
+def ensure_db():
     conn = sqlite3.connect("database.db")
     cur = conn.cursor()
 
-    # DROP old tables (important)
-    cur.execute("DROP TABLE IF EXISTS users")
-    cur.execute("DROP TABLE IF EXISTS api_keys")
-    cur.execute("DROP TABLE IF EXISTS api_usage")
-
-    # CREATE fresh tables
     cur.execute("""
-        CREATE TABLE users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT,
-            plan TEXT DEFAULT 'FREE'
-        )
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        plan TEXT DEFAULT 'FREE'
+    )
     """)
 
     cur.execute("""
-        CREATE TABLE api_keys (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT,
-            api_key TEXT UNIQUE
-        )
+    CREATE TABLE IF NOT EXISTS api_keys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT,
+        api_key TEXT UNIQUE
+    )
     """)
 
     cur.execute("""
-        CREATE TABLE api_usage (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            api_key TEXT,
-            date TEXT,
-            count INTEGER
-        )
+    CREATE TABLE IF NOT EXISTS api_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        api_key TEXT,
+        date TEXT,
+        count INTEGER
+    )
     """)
 
     conn.commit()
