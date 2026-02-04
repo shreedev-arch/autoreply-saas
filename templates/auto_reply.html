@@ -1,20 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Auto Reply</title>
+    <title>Auto Reply Dashboard</title>
 </head>
 <body>
 
 <h2>Auto Reply Dashboard</h2>
 <p>✅ You are logged in successfully</p>
 
-<form method="POST">
-    <textarea name="message" placeholder="Type a message..." rows="4" cols="50"></textarea><br><br>
-    <button type="submit">Send</button>
-</form>
+<textarea id="message" placeholder="Type a message..." rows="4" cols="50"></textarea><br><br>
+<button onclick="sendMessage()">Send</button>
+
+<p><b>Reply:</b></p>
+<div id="reply"></div>
 
 <br>
 <a href="/logout">Logout</a>
+
+<script>
+function sendMessage() {
+    const msg = document.getElementById("message").value;
+
+    fetch("/auto-reply", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: msg })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("reply").innerText = data.reply;
+    });
+}
+</script>
 
 </body>
 </html>
