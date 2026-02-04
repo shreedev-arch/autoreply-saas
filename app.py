@@ -200,4 +200,4 @@ def logout():
 
 
     if __name__ == "__main__":
-    print("Local run only")
+    pass
