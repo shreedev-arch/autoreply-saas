@@ -36,12 +36,11 @@ def ensure_db():
     conn.commit()
     conn.close()
 
-    if __name__ == "__main__":
-        init_db()   # local only
-        app.run(debug=True)
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # required for sessions
+
+ensure_db()
 
 def get_db():
     return sqlite3.connect("database.db")
@@ -198,7 +197,3 @@ def upgrade_plan():
 def logout():
     session.pop("user", None)
     return redirect(url_for("login"))
-
-
-    if __name__ == "__main__":
-        pass
