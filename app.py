@@ -43,7 +43,8 @@ def init_db():
     conn.close()
 
     if __name__ == "__main__":
-        init_db()
+        init_db()   # local only
+        app.run(debug=True)
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # required for sessions
