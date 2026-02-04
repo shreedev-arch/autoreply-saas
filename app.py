@@ -102,6 +102,11 @@ def auto_reply():
     if request.method == "GET":
         return render_template("auto_reply.html")
 
+    if request.method == "POST" and "user" in session:
+        return {
+        "reply": "UI message received successfully ✅"
+    }
+
     # 🔑 API logic starts ONLY for POST
     api_key = request.headers.get("X-API-KEY")
     if not api_key:
