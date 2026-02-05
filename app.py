@@ -98,8 +98,10 @@ def auto_reply():
         return render_template("auto_reply.html")
 
     if request.method == "POST" and "user" in session:
-        return {
-        "reply": "UI message received successfully ✅"
+    data = request.get_json()
+    msg = data.get("message", "")
+    return {
+        "reply": f"You said: {msg}"
     }
 
     # 🔑 API logic starts ONLY for POST
