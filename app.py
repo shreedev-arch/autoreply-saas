@@ -96,7 +96,8 @@ def register():
     return render_template("register.html")
 
 
-@app.route("/auto-reply", methods=["GET", "POST"])
+@app.route("/auto-reply", methods=["GET"])
+@app.route("/api/auto-reply", methods=["POST"])
 def auto_reply():
 
     # 🔒 Block access if not logged in (browser)
@@ -145,8 +146,9 @@ def auto_reply():
          return {"reply": reply}
 
     # 🔑 API logic starts ONLY for POST
-    api_key = request.headers.get("X-API-KEY")
-    if not api_key:
+    else:
+        api_key = request.headers.get("X-API-KEY")
+        if not api_key:
         return {"error": "API key missing"}, 401
 
         conn = get_db()
