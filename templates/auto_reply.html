@@ -54,5 +54,22 @@ function sendMessage() {
 }
 </script>
 
+<script>
+async function sendMessage() {
+    const msg = document.getElementById("message").value;
+
+    const res = await fetch("/auto-reply", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: msg })
+    });
+
+    const data = await res.json();
+    document.getElementById("reply").innerText = data.reply;
+}
+</script>
+
 </body>
 </html>
