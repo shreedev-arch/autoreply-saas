@@ -125,8 +125,12 @@ def auto_reply():
          )
 
     if request.method == "POST" and "user" in session:
-         data = request.get_json()
-         msg = data.get("message", "")
+         data = request.get_json(silent=True) or {}
+         msg = data.get("message", "").strip()
+
+    if not msg:
+         return {"reply": "⚠️ Message cannot be empty"}
+
          reply = f"You said: {msg}"
 
          conn = get_db()
@@ -145,13 +149,13 @@ def auto_reply():
     if not api_key:
         return {"error": "API key missing"}, 401
 
-    conn = get_db()
-    cur = conn.cursor()
+        conn = get_db()
+        cur = conn.cursor()
 
-    cur.execute("""SELECT users.username, users.plan FROM api_keys JOIN users ON api_keys.user = users.username
-    WHERE api_keys.api_key=?""",(api_key,)
-    )
-    row = cur.fetchone()
+        cur.execute("""SELECT users.username, users.plan FROM api_keys JOIN users ON api_keys.user = users.username
+        WHERE api_keys.api_key=?""",(api_key,)
+        )
+        row = cur.fetchone()
 
     if not row:
         conn.close()
