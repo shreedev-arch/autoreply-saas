@@ -149,7 +149,7 @@ def auto_reply():
     else:
         api_key = request.headers.get("X-API-KEY")
         if not api_key:
-        return {"error": "API key missing"}, 401
+            return {"error": "API key missing"}, 401
 
         conn = get_db()
         cur = conn.cursor()
