@@ -36,23 +36,6 @@
 <br>
 <a href="/logout">Logout</a>
 
-<script>
-function sendMessage() {
-    const msg = document.getElementById("message").value;
-
-    fetch("/auto-reply", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message: msg })
-    })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("reply").innerText = data.reply;
-    });
-}
-</script>
 
 <script>
 async function sendMessage() {
