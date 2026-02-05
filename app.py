@@ -33,6 +33,16 @@ def ensure_db():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT,
+        message TEXT,
+        reply TEXT,
+        date TEXT
+    )
+    """)
+
     conn.commit()
     conn.close()
 
