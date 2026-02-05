@@ -42,11 +42,12 @@ async function sendMessage() {
     const msg = document.getElementById("message").value;
 
     const res = await fetch("/auto-reply", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message: msg })
+    method: "POST",
+    credentials: "same-origin",   // 🔥 THIS LINE FIXES EVERYTHING
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message: msg })
     });
 
     const data = await res.json();
