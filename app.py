@@ -108,8 +108,8 @@ def auto_reply():
          cur = conn.cursor()
          cur.execute("SELECT api_key FROM api_keys WHERE user=?", (session["user"],))
          api_key = cur.fetchone()[0]
-        conn.close()
-        return render_template("auto_reply.html", api_key=api_key)
+         conn.close()
+         return render_template("auto_reply.html", api_key=api_key)
 
     if request.method == "POST" and "user" in session:
          data = request.get_json()
