@@ -24,6 +24,15 @@
 <p><b>Reply:</b></p>
 <div id="reply"></div>
 
+<hr>
+<h3>Recent Messages</h3>
+
+{% for msg, rep in history %}
+    <p><b>You:</b> {{ msg }}</p>
+    <p><b>Bot:</b> {{ rep }}</p>
+    <hr>
+{% endfor %}
+
 <br>
 <a href="/logout">Logout</a>
 

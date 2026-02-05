@@ -106,17 +106,39 @@ def auto_reply():
     if request.method == "GET":
          conn = get_db()
          cur = conn.cursor()
+
          cur.execute("SELECT api_key FROM api_keys WHERE user=?", (session["user"],))
          api_key = cur.fetchone()[0]
+
+         cur.execute(
+         "SELECT message, reply FROM messages WHERE user=? ORDER BY id DESC LIMIT 10",
+         (session["user"],)
+         )
+         history = cur.fetchall()
+
          conn.close()
-         return render_template("auto_reply.html", api_key=api_key)
+
+         return render_template(
+         "auto_reply.html",
+         api_key=api_key,
+         history=history
+         )
 
     if request.method == "POST" and "user" in session:
          data = request.get_json()
          msg = data.get("message", "")
-         return {
-           "reply": f"You said: {msg}"
-    }
+         reply = f"You said: {msg}"
+
+         conn = get_db()
+         cur = conn.cursor()
+         cur.execute(
+         "INSERT INTO messages (user, message, reply, date) VALUES (?, ?, ?, ?)",
+         (session["user"], msg, reply, date.today().isoformat())
+         )
+         conn.commit()
+         conn.close()
+
+         return {"reply": reply}
 
     # 🔑 API logic starts ONLY for POST
     api_key = request.headers.get("X-API-KEY")
