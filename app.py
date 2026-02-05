@@ -103,9 +103,13 @@ def auto_reply():
     if "user" not in session and request.method == "GET":
         return redirect(url_for("login"))
 
-    # 🌐 Show UI page
     if request.method == "GET":
-        return render_template("auto_reply.html")
+         conn = get_db()
+         cur = conn.cursor()
+         cur.execute("SELECT api_key FROM api_keys WHERE user=?", (session["user"],))
+         api_key = cur.fetchone()[0]
+        conn.close()
+        return render_template("auto_reply.html", api_key=api_key)
 
     if request.method == "POST" and "user" in session:
          data = request.get_json()
