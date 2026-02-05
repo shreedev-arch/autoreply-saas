@@ -173,6 +173,24 @@ def auto_reply():
         "plan": plan
     }
 
+@app.route("/upgrade-ui", methods=["POST"])
+def upgrade_ui():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "UPDATE users SET plan='PRO' WHERE username=?",
+        (session["user"],)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("auto_reply"))
+    
 @app.route("/upgrade", methods=["POST"])
 def upgrade_plan():
     data = request.get_json()
