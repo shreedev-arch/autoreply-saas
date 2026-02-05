@@ -113,8 +113,8 @@ def auto_reply():
 
         return render_template("auto_reply.html", api_key=api_key, history=history)
 
-    data = request.get_json()
-    msg = data.get("message", "").strip()
+        data = request.get_json(silent=True) or {}
+        msg = data.get("message", "").strip()
     if not msg:
         return {"reply": "⚠️ Message cannot be empty"}
 
@@ -130,6 +130,7 @@ def auto_reply():
     conn.close()
 
     return {"reply": reply}
+   
 
 # ---------------- API AUTO REPLY ----------------
 @app.route("/api/auto-reply", methods=["POST"])
@@ -137,6 +138,12 @@ def api_auto_reply():
     api_key = request.headers.get("X-API-KEY")
     if not api_key:
         return {"error": "API key missing"}, 401
+
+    data = request.get_json(silent=True) or {}
+    msg = data.get("message", "").strip()
+
+    if not msg:
+        return {"error": "Message required"}, 400
 
     conn = get_db()
     cur = conn.cursor()
@@ -149,11 +156,10 @@ def api_auto_reply():
     row = cur.fetchone()
 
     if not row:
+        conn.close()
         return {"error": "Invalid API key"}, 401
 
     user, plan = row
-    msg = request.json.get("message", "")
-
     reply = f"Hello {user}, message received ✅"
 
     cur.execute(
