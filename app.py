@@ -116,6 +116,8 @@ def auto_reply():
 
         cur.execute("SELECT api_key FROM api_keys WHERE user=?", (session["user"],))
         api_key = cur.fetchone()[0]
+        cur.execute("SELECT plan FROM users WHERE username=?", (session["user"],))
+        plan = cur.fetchone()[0]
 
         cur.execute(
             "SELECT message, reply FROM messages WHERE user=? ORDER BY id DESC LIMIT 10",
@@ -124,7 +126,7 @@ def auto_reply():
         history = cur.fetchall()
         conn.close()
 
-        return render_template("auto_reply.html", api_key=api_key, history=history)
+        return render_template("auto_reply.html", api_key=api_key, history=history, plan=plan)
 
         data = request.get_json(silent=True) or {}
         msg = data.get("message", "").strip()
