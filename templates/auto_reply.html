@@ -44,6 +44,7 @@
 
 <script>
 async function sendMessage() {
+    const btn = document.getElementById("sendBtn");
     const msg = document.getElementById("message").value.trim();
     if (!msg) return;
 
@@ -60,13 +61,14 @@ async function sendMessage() {
 
     if (data.error) {
         document.getElementById("limitMsg").innerText = data.error;
-        document.getElementById("sendBtn").disabled = true;
+        btn.disabled = true;
+        btn.innerText = "Limit Reached 🚫";
         return;
     }
 
     document.getElementById("reply").innerText = data.reply;
     document.getElementById("message").value = "";
-}
+ }
 </script>
 
 </body>
