@@ -74,19 +74,32 @@ def login():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        api_key = secrets.token_hex(16)
+        username = request.form["username"]
+        password = request.form["password"]
+
         conn = get_db()
         cur = conn.cursor()
+
+        # 🔒 Check if user already exists
+        cur.execute("SELECT id FROM users WHERE username=?", (username,))
+        if cur.fetchone():
+            conn.close()
+            return "User already exists. Please login."
+
+        api_key = secrets.token_hex(16)
+
         cur.execute(
-            "INSERT INTO users (username, password) VALUES (?,?)",
-            (request.form["username"], request.form["password"])
+            "INSERT INTO users (username, password, plan) VALUES (?, ?, 'FREE')",
+            (username, password)
         )
         cur.execute(
-            "INSERT INTO api_keys (user, api_key) VALUES (?,?)",
-            (request.form["username"], api_key)
+            "INSERT INTO api_keys (user, api_key) VALUES (?, ?)",
+            (username, api_key)
         )
+
         conn.commit()
         conn.close()
+
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -139,18 +152,14 @@ def api_auto_reply():
     if not api_key:
         return {"error": "API key missing"}, 401
 
-    data = request.get_json(silent=True) or {}
-    msg = data.get("message", "").strip()
-
-    if not msg:
-        return {"error": "Message required"}, 400
-
     conn = get_db()
     cur = conn.cursor()
 
+    # 🔍 Validate API key
     cur.execute("""
         SELECT users.username, users.plan
-        FROM api_keys JOIN users ON api_keys.user = users.username
+        FROM api_keys
+        JOIN users ON api_keys.user = users.username
         WHERE api_keys.api_key=?
     """, (api_key,))
     row = cur.fetchone()
@@ -160,16 +169,54 @@ def api_auto_reply():
         return {"error": "Invalid API key"}, 401
 
     user, plan = row
+    DAILY_LIMIT = 50 if plan == "FREE" else 1000
+    today = date.today().isoformat()
+
+    # 📊 Check usage
+    cur.execute(
+        "SELECT count FROM api_usage WHERE api_key=? AND date=?",
+        (api_key, today)
+    )
+    usage = cur.fetchone()
+
+    if usage and usage[0] >= DAILY_LIMIT:
+        conn.close()
+        return {
+            "error": "Daily API limit reached",
+            "plan": plan,
+            "limit": DAILY_LIMIT
+        }, 429
+
+    # ➕ Update usage
+    if usage:
+        cur.execute(
+            "UPDATE api_usage SET count = count + 1 WHERE api_key=? AND date=?",
+            (api_key, today)
+        )
+    else:
+        cur.execute(
+            "INSERT INTO api_usage (api_key, date, count) VALUES (?, ?, 1)",
+            (api_key, today)
+        )
+
+    data = request.get_json(silent=True) or {}
+    msg = data.get("message", "").strip()
+
     reply = f"Hello {user}, message received ✅"
 
     cur.execute(
         "INSERT INTO messages VALUES (NULL, ?, ?, ?, ?)",
-        (user, msg, reply, date.today().isoformat())
+        (user, msg, reply, today)
     )
+
     conn.commit()
     conn.close()
 
-    return {"reply": reply, "plan": plan}
+    return {
+        "reply": reply,
+        "plan": plan,
+        "remaining": DAILY_LIMIT - (usage[0] + 1 if usage else 1)
+    }
 
 # ---------------- UPGRADE ----------------
 @app.route("/upgrade-ui", methods=["POST"])
