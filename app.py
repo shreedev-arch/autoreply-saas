@@ -155,12 +155,12 @@ def api_auto_reply():
     conn = get_db()
     cur = conn.cursor()
 
-    # 🔍 Validate API key
+    # 🔍 Validate API key + get plan
     cur.execute("""
         SELECT users.username, users.plan
         FROM api_keys
         JOIN users ON api_keys.user = users.username
-        WHERE api_keys.api_key=?
+        WHERE api_keys.api_key = ?
     """, (api_key,))
     row = cur.fetchone()
 
@@ -169,6 +169,8 @@ def api_auto_reply():
         return {"error": "Invalid API key"}, 401
 
     user, plan = row
+
+    # ⚙️ Rate limits
     DAILY_LIMIT = 50 if plan == "FREE" else 1000
     today = date.today().isoformat()
 
@@ -181,11 +183,7 @@ def api_auto_reply():
 
     if usage and usage[0] >= DAILY_LIMIT:
         conn.close()
-        return {
-            "error": "Daily API limit reached",
-            "plan": plan,
-            "limit": DAILY_LIMIT
-        }, 429
+        return {"error": "Daily limit reached"}, 429
 
     # ➕ Update usage
     if usage:
@@ -199,23 +197,22 @@ def api_auto_reply():
             (api_key, today)
         )
 
+    # 💬 Message logic
     data = request.get_json(silent=True) or {}
-    msg = data.get("message", "").strip()
-
+    message = data.get("message", "").strip()
     reply = f"Hello {user}, message received ✅"
 
     cur.execute(
         "INSERT INTO messages VALUES (NULL, ?, ?, ?, ?)",
-        (user, msg, reply, today)
+        (user, message, reply, today)
     )
 
     conn.commit()
     conn.close()
 
     return {
-        "reply": reply,
         "plan": plan,
-        "remaining": DAILY_LIMIT - (usage[0] + 1 if usage else 1)
+        "reply": reply
     }
 
 # ---------------- UPGRADE ----------------
