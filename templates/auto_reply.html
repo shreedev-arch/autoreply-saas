@@ -23,7 +23,8 @@
 </form>
 
 <textarea id="message" placeholder="Type a message..." rows="4" cols="50"></textarea><br><br>
-<button type="button" onclick="sendMessage()">Send</button>
+<button id="sendBtn" type="button" onclick="sendMessage()">Send</button>
+<p id="limitMsg" style="color:red;"></p>
 
 <p><b>Reply:</b></p>
 <div id="reply"></div>
@@ -43,7 +44,8 @@
 
 <script>
 async function sendMessage() {
-    const msg = document.getElementById("message").value;
+    const msg = document.getElementById("message").value.trim();
+    if (!msg) return;
 
     const res = await fetch("/api/auto-reply", {
         method: "POST",
@@ -55,7 +57,15 @@ async function sendMessage() {
     });
 
     const data = await res.json();
+
+    if (data.error) {
+        document.getElementById("limitMsg").innerText = data.error;
+        document.getElementById("sendBtn").disabled = true;
+        return;
+    }
+
     document.getElementById("reply").innerText = data.reply;
+    document.getElementById("message").value = "";
 }
 </script>
 
