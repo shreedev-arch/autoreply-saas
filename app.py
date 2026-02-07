@@ -7,7 +7,7 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 def get_db():
-    return sqlite3.connect("database.db")
+    return sqlite3.connect("/var/data/database.db")
 
 def ensure_db():
     conn = get_db()
