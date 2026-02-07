@@ -9,9 +9,18 @@
 <p>✅ You are logged in successfully</p>
 
 <p><strong>Your API Key:</strong> {{ api_key }}</p>
+
 <p>
-  <strong>Plan:</strong> 
-  <span style="padding:4px 10px; background:#e0e0e0; border-radius:6px;">{{ plan }}</span>
+  <strong>Plan:</strong>
+  <span style="
+    padding:4px 10px;
+    border-radius:6px;
+    background: {{ 'gold' if plan=='PRO' else '#eee' }};
+    color: {{ 'black' if plan=='PRO' else '#555' }};
+    font-weight:bold;
+  ">
+    {{ plan }}
+  </span>
 </p>
 
 <hr>
@@ -22,7 +31,10 @@
     <button type="submit">Upgrade to PRO 🚀</button>
 </form>
 
+<br>
+
 <textarea id="message" placeholder="Type a message..." rows="4" cols="50"></textarea><br><br>
+
 <button id="sendBtn" type="button" onclick="sendMessage()">Send</button>
 <p id="limitMsg" style="color:red;"></p>
 
@@ -30,6 +42,7 @@
 <div id="reply"></div>
 
 <hr>
+
 <h3>Recent Messages</h3>
 
 {% for msg, rep in history %}
@@ -40,7 +53,6 @@
 
 <br>
 <a href="/logout">Logout</a>
-
 
 <script>
 async function sendMessage() {
@@ -68,7 +80,7 @@ async function sendMessage() {
 
     document.getElementById("reply").innerText = data.reply;
     document.getElementById("message").value = "";
- }
+}
 </script>
 
 </body>

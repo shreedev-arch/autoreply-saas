@@ -157,7 +157,7 @@ def api_auto_reply():
     conn = get_db()
     cur = conn.cursor()
 
-    # 🔍 Validate API key + get plan
+    # 🔍 Validate API key + get user + plan
     cur.execute("""
         SELECT users.username, users.plan
         FROM api_keys
@@ -202,6 +202,11 @@ def api_auto_reply():
     # 💬 Message logic
     data = request.get_json(silent=True) or {}
     message = data.get("message", "").strip()
+
+    if not message:
+        conn.close()
+        return {"error": "Message cannot be empty"}, 400
+
     reply = f"Hello {user}, message received ✅"
 
     cur.execute(
