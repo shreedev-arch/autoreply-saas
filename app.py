@@ -1,8 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 import secrets
 from datetime import date
+import os
+import razorpay
 
+razorpay_client = razorpay.Client(auth=(
+    os.getenv("RAZORPAY_KEY_ID"),
+    os.getenv("RAZORPAY_KEY_SECRET")
+ ))
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
@@ -235,6 +241,36 @@ def upgrade_ui():
     conn.close()
 
     return redirect(url_for("auto_reply"))
+
+@app.route("/create-payment", methods=["POST"])
+def create_payment():
+    order = razorpay_client.order.create({
+        "amount": 10000,  # ₹100 in paise
+        "currency": "INR",
+        "payment_capture": 1
+    })
+    return jsonify(order)
+
+@app.route("/payment-success", methods=["POST"])
+def payment_success():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    payment_id = request.form.get("razorpay_payment_id")
+
+    if not payment_id:
+        return "Payment Failed", 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET plan='PRO' WHERE username=?",
+        (session["user"],)
+    )
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("auto_reply"))     
 
 # ---------------- LOGOUT ----------------
 @app.route("/logout")
