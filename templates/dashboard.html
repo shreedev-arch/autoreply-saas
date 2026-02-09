@@ -4,6 +4,7 @@
     <title>Dashboard</title>
 </head>
 <body>
+
     <h2>Auto Reply Dashboard</h2>
 
     <form method="POST">
@@ -20,5 +21,15 @@
     </ul>
 
     <a href="/logout">Logout</a>
+
+    <!-- ✅ Auto clean URL after payment -->
+    <script>
+    if (new URLSearchParams(window.location.search).get("payment") === "success") {
+        setTimeout(() => {
+            window.location.href = "/dashboard";
+        }, 1500);
+    }
+    </script>
+
 </body>
 </html>
