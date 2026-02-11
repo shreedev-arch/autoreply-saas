@@ -27,11 +27,39 @@
 
 <h3>Upgrade Plan</h3>
 
-<form action="https://rzp.io/rzp/IzR2T1z" method="GET">
-  <button type="submit">Upgrade to PRO 🚀</button>
-</form>
+<p style="color:red; font-weight:bold;">
+Current Plan Debug: {{ plan }}
+</p>
 
-<br>
+<!-- 👇 THIS PART -->
+<button type="button" id="payBtn">Upgrade to PRO 🚀</button>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+document.getElementById("payBtn").onclick = async function () {
+    const res = await fetch("/create-order", { method: "POST" });
+    const order = await res.json();
+
+    const options = {
+        key: "{{ razorpay_key_id }}",
+        amount: order.amount,
+        currency: "INR",
+        order_id: order.id,
+        name: "AutoReply PRO",
+        description: "Upgrade to PRO",
+        handler: function () {
+            window.location.href = "/dashboard";
+        }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();   // 🔥 THIS opens popup, not redirect
+};
+</script>
+<!-- 👆 THIS PART -->
+
+<hr>
 
 <textarea id="message" placeholder="Type a message..." rows="4" cols="50"></textarea><br><br>
 
@@ -56,6 +84,7 @@
 
 <script>
 async function sendMessage() {
+
     const btn = document.getElementById("sendBtn");
     const msg = document.getElementById("message").value.trim();
     if (!msg) return;
