@@ -27,12 +27,11 @@
 
 <h3>Upgrade Plan</h3>
 
-<p style="color:red; font-weight:bold;">
-Current Plan Debug: {{ plan }}
-</p>
-
-<!-- 👇 THIS PART -->
+{% if plan == "FREE" %}
 <button type="button" id="payBtn">Upgrade to PRO 🚀</button>
+{% else %}
+<p style="color:green;font-weight:bold;">✅ You are PRO User</p>
+{% endif %}
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
