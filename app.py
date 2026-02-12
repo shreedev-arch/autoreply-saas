@@ -149,6 +149,7 @@ def dashboard():
 # ---------------- API AUTO REPLY ----------------
 @app.route("/api/auto-reply", methods=["POST"])
 def api_auto_reply():
+
     api_key = request.headers.get("X-API-KEY")
     if not api_key:
         return {"error": "API key missing"}, 401
@@ -156,6 +157,7 @@ def api_auto_reply():
     conn = get_db()
     cur = conn.cursor()
 
+    # Get user + plan
     cur.execute("""
         SELECT users.username, users.plan
         FROM api_keys
@@ -170,8 +172,13 @@ def api_auto_reply():
 
     user, plan = row
     today = date.today().isoformat()
+
+    # ===== PLAN LIMIT CONTROL =====
+    # FREE → 50/day
+    # PRO → 1000/day
     DAILY_LIMIT = 50 if plan == "FREE" else 1000
 
+    # Check usage
     cur.execute(
         "SELECT count FROM api_usage WHERE api_key=? AND date=?",
         (api_key, today)
@@ -180,8 +187,11 @@ def api_auto_reply():
 
     if usage and usage[0] >= DAILY_LIMIT:
         conn.close()
-        return {"error": "Daily limit reached"}, 429
+        return {
+            "error": "Daily limit reached. Upgrade to PRO 🚀"
+        }, 429
 
+    # Update usage
     if usage:
         cur.execute(
             "UPDATE api_usage SET count = count + 1 WHERE api_key=? AND date=?",
@@ -193,14 +203,18 @@ def api_auto_reply():
             (api_key, today)
         )
 
+    # Get message
     data = request.get_json()
     message = data.get("message", "").strip()
+
     if not message:
         conn.close()
         return {"error": "Empty message"}, 400
 
+    # Bot reply
     reply = f"Hello {user}, message received ✅"
 
+    # Save message + reply
     cur.execute(
         "INSERT INTO messages VALUES (NULL, ?, ?, ?, ?)",
         (user, message, reply, today)
@@ -209,7 +223,11 @@ def api_auto_reply():
     conn.commit()
     conn.close()
 
-    return {"reply": reply, "plan": plan}
+    return {
+        "reply": reply,
+        "plan": plan,
+        "daily_limit": DAILY_LIMIT
+    }
 
 # ---------------- RAZORPAY ORDER ----------------
 @app.route("/create-order", methods=["POST"])
