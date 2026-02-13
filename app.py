@@ -279,6 +279,9 @@ def razorpay_webhook():
 
             expiry_date = (date.today() + timedelta(days=365)).isoformat()
 
+            print("Updating user to PRO")
+            print("Expiry set to:", expiry_date)
+
             cur.execute("""
                 UPDATE users SET plan='PRO',pro_expiry=? WHERE username=? """, (expiry_date, username))
             conn.commit()
