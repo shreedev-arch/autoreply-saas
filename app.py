@@ -26,10 +26,10 @@ def ensure_db():
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
+        username TEXT PRIMARY KEY,
         password TEXT,
-        plan TEXT DEFAULT 'FREE'
+        plan TEXT DEFAULT 'FREE',
+        pro_expiry TEXT
     )""")
 
     cur.execute("""
