@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 import secrets
-from datetime import date
+from datetime import date, timedelta
 import os
 import razorpay
 import hmac
@@ -276,10 +276,11 @@ def razorpay_webhook():
         if username:
             conn = get_db()
             cur = conn.cursor()
-            cur.execute(
-                "UPDATE users SET plan='PRO' WHERE username=?",
-                (username,)
-            )
+
+            expiry_date = (date.today() + timedelta(days=365)).isoformat()
+
+            cur.execute("""
+                UPDATE users SET plan='PRO',pro_expiry=? WHERE username=? """, (expiry_date, username))
             conn.commit()
             conn.close()
 
